@@ -104,7 +104,6 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   patch_mode                                             = var.patch_mode
   patch_assessment_mode                                  = var.patch_assessment_mode
   bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
-  vm_agent_platform_updates_enabled                      = var.vm_agent_platform_updates_enabled
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
 
@@ -183,7 +182,6 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   patch_assessment_mode                                  = var.patch_assessment_mode
   bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
   enable_automatic_updates                               = var.enable_automatic_updates
-  vm_agent_platform_updates_enabled                      = var.vm_agent_platform_updates_enabled
   timezone                                               = var.timezone
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled

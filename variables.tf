@@ -218,7 +218,7 @@ variable "enable_automatic_updates" {
 
 variable "vm_agent_platform_updates_enabled" {
   type        = bool
-  description = "Enable or disable VM Agent platform updates. Defaults to true."
+  description = "(DEPRECATED - remove in next major version bump) Enable or disable VM Agent platform updates. Defaults to true."
   default     = true
 }
 
