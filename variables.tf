@@ -403,3 +403,14 @@ variable "vtpm_enabled" {
   description = "Enable or disable Virtual Trusted Platform Module (vTPM) for the VM."
   default     = true
 }
+
+variable "disk_controller_type" {
+  type        = string
+  description = "The disk controller type for the VM. Possible values are 'SCSI' and 'NVMe'. Defaults to 'SCSI'."
+  default     = null
+  validation {
+    condition     = var.disk_controller_type == "SCSI" || var.disk_controller_type == "NVMe" || var.disk_controller_type == null
+    error_message = "disk_controller_type must be either 'SCSI' or 'NVMe'"
+  }
+  
+}
