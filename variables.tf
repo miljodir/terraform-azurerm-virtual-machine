@@ -409,7 +409,7 @@ variable "disk_controller_type" {
   description = "The disk controller type for the VM. Possible values are 'SCSI' and 'NVMe'. Defaults to 'SCSI'."
   default     = null
   validation {
-    condition     = var.disk_controller_type == "SCSI" || var.disk_controller_type == "NVMe"
+    condition     = var.disk_controller_type == "SCSI" || var.disk_controller_type == "NVMe" || var.disk_controller_type == null
     error_message = "disk_controller_type must be either 'SCSI' or 'NVMe'"
   }
   
