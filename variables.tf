@@ -274,7 +274,7 @@ variable "encryption_key_vault_id" {
 variable "encryption_at_host_enabled" {
   type        = bool
   description = "Enable or disable encryption at host. Cannot be used with Azure Disk Encryption. Defaults to false."
-  default     = false
+  default     = true
 }
 
 variable "vm_extension" {
