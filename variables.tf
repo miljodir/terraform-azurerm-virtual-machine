@@ -365,7 +365,8 @@ variable "custom_script_extension" {
 
 variable "avd_register_session_host" {
   type = object({
-    module_url              = optional(string, "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_02-23-2022.zip")
+    # https://github.com/Azure/RDS-Templates/blob/master/ARM-wvd-templates/DSC/Configuration.zip
+    module_url              = optional(string, "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration.zip")
     host_pool_name          = string
     registration_info_token = string
     aad_join                = optional(bool, true)

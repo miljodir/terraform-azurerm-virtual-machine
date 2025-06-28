@@ -133,7 +133,7 @@ resource "azurerm_virtual_machine_extension" "avd_register_session_host" {
   virtual_machine_id   = azurerm_windows_virtual_machine.win_vm[count.index].id
   publisher            = "Microsoft.Powershell"
   type                 = "DSC"
-  type_handler_version = "2.73"
+  type_handler_version = "2.83"
 
   settings = jsonencode({
     "modulesUrl" : var.avd_register_session_host["module_url"],
@@ -150,7 +150,7 @@ resource "azurerm_virtual_machine_extension" "avd_register_session_host" {
   })
 
   lifecycle {
-    ignore_changes = [settings, protected_settings, tags]
+    ignore_changes = [type_handler_version, settings, protected_settings, tags]
   }
   depends_on = [azurerm_virtual_machine_extension.aad_extension_windows]
 }
