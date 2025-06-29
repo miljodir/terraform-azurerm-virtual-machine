@@ -365,8 +365,10 @@ variable "custom_script_extension" {
 
 variable "avd_register_session_host" {
   type = object({
-    # https://github.com/Azure/RDS-Templates/blob/master/ARM-wvd-templates/DSC/Configuration.zip
-    module_url              = optional(string, "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration.zip")
+    #     # https://github.com/Azure/RDS-Templates/blob/master/ARM-wvd-templates/DSC/Configuration.zip (requires fw opening)
+    # https://github.com/Azure/RDS-Templates/issues/790
+    # Finding the latest extension version can be done via Azure Portal --> AVD quickstart --> View template
+    module_url              = optional(string, "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.02790.438.zip")
     host_pool_name          = string
     registration_info_token = string
     aad_join                = optional(bool, true)
@@ -413,5 +415,5 @@ variable "disk_controller_type" {
     condition     = var.disk_controller_type == "SCSI" || var.disk_controller_type == "NVMe" || var.disk_controller_type == null
     error_message = "disk_controller_type must be either 'SCSI' or 'NVMe'"
   }
-  
+
 }
