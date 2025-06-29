@@ -39,8 +39,8 @@ variable "os_flavor" {
 
 variable "virtual_machine_size" {
   type        = string
-  description = "The Virtual Machine SKU for the Virtual Machine, Default is Standard_B2s"
-  default     = "Standard_B2s"
+  description = "The Virtual Machine SKU for the Virtual Machine, Default is Standard_B2as_v2"
+  default     = "Standard_B2as_v2"
 }
 
 variable "enable_accelerated_networking" {
