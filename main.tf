@@ -201,7 +201,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   location                                               = var.location
   size                                                   = var.virtual_machine_size
   admin_username                                         = azurerm_managed_disk.osdisk_create[0].id == null ? var.admin_username : null
-  admin_password                                         = var.admin_password == null ? random_password.passwd[0].result : var.admin_password
+  admin_password                                         = azurerm_managed_disk.osdisk_create[0].id == null ? null : var.admin_password == null ? random_password.passwd[0].result : var.admin_password
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
   provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id == null ? var.provision_vm_agent : null
@@ -234,7 +234,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   }
 
   os_disk {
-    storage_account_type = azurerm_managed_disk.osdisk_create[0].id != null ? var.os_disk_storage_account_type : null
+    storage_account_type = azurerm_managed_disk.osdisk_create[0].id == null ? var.os_disk_storage_account_type : null
     caching              = "ReadWrite"
     name                 = azurerm_managed_disk.osdisk_create[0].id != null ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
     disk_size_gb         = var.os_disk_size_gb
