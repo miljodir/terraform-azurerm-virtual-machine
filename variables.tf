@@ -249,10 +249,9 @@ variable "datadisks" {
 
 variable "osdisk" {
   description = "Optional custom osdisk settings. This setting should only be used when the VM is created from a snapshot"
-  default     = {}
+  default     = null
 
   type = object({
-    size          = optional(string, "128")
     create_option = optional(string, "Copy")
     override_name = optional(string, null)
   })

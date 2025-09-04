@@ -56,12 +56,12 @@ resource "azurerm_network_interface" "nic" {
 #---------------------------------------
 
 resource "azurerm_managed_disk" "osdisk_create" {
-  count                = var.osdisk == {} ? 0 : 1
+  count                = var.osdisk == null ? 0 : 1
   name                 = var.osdisk.override_name != null ? var.osdisk.override_name : "${var.virtual_machine_name}-osdisk"
   location             = var.location
   resource_group_name  = var.resource_group_name
   storage_account_type = "StandardSSD_LRS"
-  create_option        = var.osdisk.create_option
+  create_option        = var.os_disk_size_gb
   disk_size_gb         = var.osdisk.size
   os_type              = var.os_flavor == "windows" ? "Windows" : "Linux"
 
@@ -118,26 +118,26 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = var.osdisk == {} ? var.admin_username : null
-  admin_password                                         = var.osdisk == {} ? var.admin_password == null ? random_password.passwd[0].result : var.admin_password : null
+  admin_username                                         = var.osdisk == null ? var.admin_username : null
+  admin_password                                         = var.osdisk == null ? var.admin_password == null ? random_password.passwd[0].result : var.admin_password : null
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = var.osdisk == {} ? var.provision_vm_agent : null
+  provision_vm_agent                                     = var.osdisk == null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
   availability_set_id                                    = var.availability_set_id
   zone                                                   = var.availability_zone
-  patch_mode                                             = var.osdisk == {} ? var.patch_mode : null
-  patch_assessment_mode                                  = var.osdisk == {} ? var.patch_assessment_mode : null
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == {} ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  patch_mode                                             = var.osdisk == null ? var.patch_mode : null
+  patch_assessment_mode                                  = var.osdisk == null ? var.patch_assessment_mode : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
   disk_controller_type                                   = var.disk_controller_type
-  os_managed_disk_id                                     = var.osdisk != {} ? azurerm_managed_disk.osdisk_create[0].id : null
+  os_managed_disk_id                                     = var.osdisk != null ? azurerm_managed_disk.osdisk_create[0].id : null
 
   dynamic "source_image_reference" {
-    for_each = var.osdisk != {} ? [] : [1]
+    for_each = var.osdisk != null ? [] : [1]
     content {
       publisher = local.image["publisher"]
       offer     = local.image["offer"]
@@ -147,9 +147,9 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   }
 
   os_disk {
-    storage_account_type = var.osdisk == {} ? var.os_disk_storage_account_type : null
+    storage_account_type = var.osdisk == null ? var.os_disk_storage_account_type : null
     caching              = "ReadWrite"
-    name                 = var.osdisk != {} ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
+    name                 = var.osdisk != null ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
     disk_size_gb         = var.os_disk_size_gb
   }
 
@@ -194,31 +194,31 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = var.osdisk == {} ? var.admin_username : null
-  admin_password                                         = var.osdisk == {} ? var.admin_password == null ? random_password.passwd[0].result : var.admin_password : null
+  admin_username                                         = var.osdisk == null ? var.admin_username : null
+  admin_password                                         = var.osdisk == null ? var.admin_password == null ? random_password.passwd[0].result : var.admin_password : null
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = var.osdisk == {} ? var.provision_vm_agent : null
+  provision_vm_agent                                     = var.osdisk == null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
   license_type                                           = var.license_type
   availability_set_id                                    = var.availability_set_id
   zone                                                   = var.availability_zone
-  patch_mode                                             = var.osdisk == {} ? var.patch_mode : null
-  patch_assessment_mode                                  = var.osdisk == {} ? var.patch_assessment_mode : null
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == {} ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
-  enable_automatic_updates                               = var.osdisk == {} ? var.enable_automatic_updates : null
+  patch_mode                                             = var.osdisk == null ? var.patch_mode : null
+  patch_assessment_mode                                  = var.osdisk == null ? var.patch_assessment_mode : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  enable_automatic_updates                               = var.osdisk == null ? var.enable_automatic_updates : null
   timezone                                               = var.timezone
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
-  hotpatching_enabled                                    = var.osdisk == {} ? var.hotpatching_enabled : null
+  hotpatching_enabled                                    = var.osdisk == null ? var.hotpatching_enabled : null
   tags                                                   = var.tags
   disk_controller_type                                   = var.disk_controller_type
-  os_managed_disk_id                                     = var.osdisk != {} ? azurerm_managed_disk.osdisk_create[0].id : null
+  os_managed_disk_id                                     = var.osdisk != null ? azurerm_managed_disk.osdisk_create[0].id : null
 
   dynamic "source_image_reference" {
-    for_each = var.osdisk != {} ? [] : [1]
+    for_each = var.osdisk != null ? [] : [1]
     content {
       publisher = local.image["publisher"]
       offer     = local.image["offer"]
@@ -228,9 +228,9 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   }
 
   os_disk {
-    storage_account_type = var.osdisk == {} ? var.os_disk_storage_account_type : null
+    storage_account_type = var.osdisk == null ? var.os_disk_storage_account_type : null
     caching              = "ReadWrite"
-    name                 = var.osdisk != {} ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
+    name                 = var.osdisk != null ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
     disk_size_gb         = var.os_disk_size_gb
   }
 
