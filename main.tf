@@ -70,7 +70,7 @@ resource "azurerm_managed_disk" "osdisk_create" {
       source_resource_id,
       hyper_v_generation,
       disk_iops_read_only,
-      disk_ops_read_write,
+      disk_iops_read_write,
       disk_mbps_read_only,
       disk_mbps_read_write,
       on_demand_bursting_enabled,
