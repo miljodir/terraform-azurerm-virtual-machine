@@ -233,14 +233,11 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
     }
   }
 
-  dynamic "os_disk" {
-    for_each = azurerm_managed_disk.osdisk_create[0].id == null ? [1] : []
-    content {
-      storage_account_type = var.os_disk_storage_account_type
-      caching              = "ReadWrite"
-      name                 = var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
-      disk_size_gb         = var.os_disk_size_gb
-    }
+  os_disk {
+    storage_account_type = var.os_disk_storage_account_type
+    caching              = "ReadWrite"
+    name                 = var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
+    disk_size_gb         = var.os_disk_size_gb
   }
 
   dynamic "additional_capabilities" {
