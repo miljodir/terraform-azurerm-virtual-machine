@@ -54,6 +54,23 @@ resource "azurerm_network_interface" "nic" {
 #---------------------------------------
 # Managed disk creation and attachment
 #---------------------------------------
+
+resource "azurerm_managed_disk" "osdisk_create" {
+  for_each             = var.osdisk == {} ? {} : { for k, v in var.osdisk : osdisk => v }
+  name                 = each.value.override_name != null ? each.value.override_name : "${var.virtual_machine_name}-osdisk"
+  location             = var.location
+  resource_group_name  = var.resource_group_name
+  storage_account_type = each.value.type
+  create_option        = each.value.create_option
+  disk_size_gb         = each.value.size
+
+  lifecycle {
+    ignore_changes = [
+      source_resource_id,
+    ]
+  }
+}
+
 resource "azurerm_managed_disk" "datadisks_create" {
   for_each             = var.datadisks
   name                 = each.value.override_name != null ? each.value.override_name : "${var.virtual_machine_name}-datadisk${each.value.lun}"
@@ -107,7 +124,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
   disk_controller_type                                   = var.disk_controller_type
-  os_managed_disk_id                                     = var.os_managed_disk_id
+  os_managed_disk_id                                     = azurerm_managed_disk.osdisk_create["osdisk"].id != null ? azurerm_managed_disk.osdisk_create["osdisk"].id : null
 
   admin_ssh_key {
     username   = var.admin_username
@@ -190,7 +207,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   hotpatching_enabled                                    = var.hotpatching_enabled
   tags                                                   = var.tags
   disk_controller_type                                   = var.disk_controller_type
-  os_managed_disk_id                                     = var.os_managed_disk_id
+  os_managed_disk_id                                     = azurerm_managed_disk.osdisk_create["osdisk"].id != null ? azurerm_managed_disk.osdisk_create["osdisk"].id : null
 
   source_image_reference {
     publisher = local.image["publisher"]
