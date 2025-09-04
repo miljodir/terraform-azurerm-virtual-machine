@@ -136,6 +136,11 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   disk_controller_type                                   = var.disk_controller_type
   os_managed_disk_id                                     = var.osdisk != null ? azurerm_managed_disk.osdisk_create[0].id : null
 
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = var.generate_admin_ssh_key == true && var.os_flavor == "linux" ? tls_private_key.rsa[0].public_key_openssh : file(var.admin_ssh_key_data)
+  }
+
   dynamic "source_image_reference" {
     for_each = var.osdisk != null ? [] : [1]
     content {
