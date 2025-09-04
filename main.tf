@@ -118,11 +118,11 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = var.admin_username
+  admin_username                                         = azurerm_managed_disk.osdisk_create[0].id != null ? var.admin_username : null
   admin_password                                         = var.disable_password_authentication != true && var.admin_password == null ? try(random_password.passwd[0].result, null) : var.admin_password
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = var.provision_vm_agent
+  provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id != null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
@@ -142,11 +142,14 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
     public_key = var.generate_admin_ssh_key == true && var.os_flavor == "linux" ? tls_private_key.rsa[0].public_key_openssh : file(var.admin_ssh_key_data)
   }
 
-  source_image_reference {
-    publisher = local.image["publisher"]
-    offer     = local.image["offer"]
-    sku       = local.image["sku"]
-    version   = local.image["version"]
+  dynamic "source_image_reference" {
+    for_each = azurerm_managed_disk.osdisk_create[0].id != null ? [] : [1]
+    content {
+      publisher = local.image["publisher"]
+      offer     = local.image["offer"]
+      sku       = local.image["sku"]
+      version   = local.image["version"]
+    }
   }
 
   os_disk {
@@ -197,11 +200,11 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = var.admin_username
+  admin_username                                         = azurerm_managed_disk.osdisk_create[0].id != null ? var.admin_username : null
   admin_password                                         = var.admin_password == null ? random_password.passwd[0].result : var.admin_password
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = var.provision_vm_agent
+  provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id != null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
@@ -220,11 +223,14 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   disk_controller_type                                   = var.disk_controller_type
   os_managed_disk_id                                     = azurerm_managed_disk.osdisk_create[0].id != null ? azurerm_managed_disk.osdisk_create[0].id : null
 
-  source_image_reference {
-    publisher = local.image["publisher"]
-    offer     = local.image["offer"]
-    sku       = local.image["sku"]
-    version   = local.image["version"]
+  dynamic "source_image_reference" {
+    for_each = azurerm_managed_disk.osdisk_create[0].id != null ? [] : [1]
+    content {
+      publisher = local.image["publisher"]
+      offer     = local.image["offer"]
+      sku       = local.image["sku"]
+      version   = local.image["version"]
+    }
   }
 
   os_disk {
