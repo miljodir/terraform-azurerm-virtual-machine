@@ -18,7 +18,7 @@ resource "tls_private_key" "rsa" {
 # Resource Group, VNet, Subnet selection & Random Resources
 #----------------------------------------------------------
 resource "random_password" "passwd" {
-  count       = (var.disable_password_authentication != true && var.os_flavor == "linux") || (var.os_flavor == "windows" && var.admin_password == null) ? 1 : 0
+  count       = (var.disable_password_authentication != true && var.os_flavor == "linux") || (var.os_flavor == "windows" && var.admin_password == null) && var.osdisk == null ? 1 : 0
   length      = 24
   min_upper   = 4
   min_lower   = 2
