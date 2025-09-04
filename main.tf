@@ -56,7 +56,7 @@ resource "azurerm_network_interface" "nic" {
 #---------------------------------------
 
 resource "azurerm_managed_disk" "osdisk_create" {
-  for_each             = var.osdisk == {} ? {} : { for k, v in var.osdisk : osdisk => v }
+  for_each             = var.osdisk == {} ? {} : { for k, v in var.osdisk : "osdisk" => v }
   name                 = each.value.override_name != null ? each.value.override_name : "${var.virtual_machine_name}-osdisk"
   location             = var.location
   resource_group_name  = var.resource_group_name
