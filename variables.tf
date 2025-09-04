@@ -247,6 +247,16 @@ variable "datadisks" {
   }))
 }
 
+variable "osdisk" {
+  description = "Optional custom osdisk settings. This setting should only be used when the VM is created from a snapshot"
+  default     = null
+
+  type = object({
+    create_option = optional(string, "Copy")
+    override_name = optional(string, null)
+  })
+}
+
 variable "enable_aad_login" {
   type        = bool
   description = "Set to true if you want to enable AAD Login VM extension"
@@ -416,4 +426,10 @@ variable "disk_controller_type" {
     error_message = "disk_controller_type must be either 'SCSI' or 'NVMe'"
   }
 
+}
+
+variable "nic_name" {
+  type        = string
+  description = "Override the network interface name. If not set, the name will be generated from the virtual machine name."
+  default     = null
 }
