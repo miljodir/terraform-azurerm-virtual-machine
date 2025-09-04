@@ -236,7 +236,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   os_disk {
     storage_account_type = azurerm_managed_disk.osdisk_create[0].id != null ? var.os_disk_storage_account_type : null
     caching              = "ReadWrite"
-    name                 = azurerm_managed_disk.osdisk_create[0].id != null ? var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk" : null
+    name                 = azurerm_managed_disk.osdisk_create[0].id != null ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
     disk_size_gb         = var.os_disk_size_gb
   }
 
