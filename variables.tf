@@ -428,3 +428,9 @@ variable "disk_controller_type" {
   }
 
 }
+
+variable "nic_name" {
+  type        = string
+  description = "Override the network interface name. If not set, the name will be generated from the virtual machine name."
+  default     = null
+}
