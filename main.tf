@@ -60,13 +60,24 @@ resource "azurerm_managed_disk" "osdisk_create" {
   name                 = var.osdisk.override_name != null ? var.osdisk.override_name : "${var.virtual_machine_name}-osdisk"
   location             = var.location
   resource_group_name  = var.resource_group_name
-  storage_account_type = "Standard_LRS"
+  storage_account_type = "StandardSSD_LRS"
   create_option        = var.osdisk.create_option
   disk_size_gb         = var.osdisk.size
+  os_type              = var.os_flavor == "windows" ? "Windows" : "Linux"
 
   lifecycle {
     ignore_changes = [
       source_resource_id,
+      hyper_v_generation,
+      disk_iops_read_only,
+      disk_ops_read_write,
+      disk_mbps_read_only,
+      disk_mbps_read_write,
+      on_demand_bursting_enabled,
+      trusted_launch_enabled,
+      upload_size_bytes,
+      tags,
+
     ]
   }
 }
