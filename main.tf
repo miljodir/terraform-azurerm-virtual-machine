@@ -61,8 +61,8 @@ resource "azurerm_managed_disk" "osdisk_create" {
   location             = var.location
   resource_group_name  = var.resource_group_name
   storage_account_type = "StandardSSD_LRS"
-  create_option        = var.os_disk_size_gb
-  disk_size_gb         = var.osdisk.size
+  create_option        = var.osdisk.create_option
+  disk_size_gb         = var.os_disk_size_gb
   os_type              = var.os_flavor == "windows" ? "Windows" : "Linux"
 
   lifecycle {
