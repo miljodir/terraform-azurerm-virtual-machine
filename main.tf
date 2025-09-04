@@ -234,7 +234,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   }
 
   dynamic "os_disk" {
-    for_each = var.os_disk_size_gb == null ? [] : [1]
+    for_each = azurerm_managed_disk.osdisk_create[0].id == null ? [1] : []
     content {
       storage_account_type = var.os_disk_storage_account_type
       caching              = "ReadWrite"
