@@ -201,7 +201,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   location                                               = var.location
   size                                                   = var.virtual_machine_size
   admin_username                                         = azurerm_managed_disk.osdisk_create[0].id == null ? var.admin_username : null
-  admin_password                                         = azurerm_managed_disk.osdisk_create[0].id == null ? null : var.admin_password == null ? random_password.passwd[0].result : var.admin_password
+  admin_password                                         = azurerm_managed_disk.osdisk_create[0].id == null ? var.admin_password == null ? random_password.passwd[0].result : var.admin_password : null
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
   provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id == null ? var.provision_vm_agent : null
