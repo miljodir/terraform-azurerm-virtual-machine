@@ -200,7 +200,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = azurerm_managed_disk.osdisk_create[0].id != null ? var.admin_username : null
+  admin_username                                         = azurerm_managed_disk.osdisk_create[0].id == null ? var.admin_username : null
   admin_password                                         = var.admin_password == null ? random_password.passwd[0].result : var.admin_password
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
@@ -218,7 +218,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   timezone                                               = var.timezone
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
-  hotpatching_enabled                                    = var.hotpatching_enabled
+  hotpatching_enabled                                    = azurerm_managed_disk.osdisk_create[0].id == null ? var.hotpatching_enabled : null
   tags                                                   = var.tags
   disk_controller_type                                   = var.disk_controller_type
   os_managed_disk_id                                     = azurerm_managed_disk.osdisk_create[0].id != null ? azurerm_managed_disk.osdisk_create[0].id : null
