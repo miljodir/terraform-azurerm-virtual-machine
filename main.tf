@@ -60,7 +60,7 @@ resource "azurerm_managed_disk" "osdisk_create" {
   name                 = var.osdisk.override_name != null ? var.osdisk.override_name : "${var.virtual_machine_name}-osdisk"
   location             = var.location
   resource_group_name  = var.resource_group_name
-  storage_account_type = var.osdisk.type
+  storage_account_type = "Standard_LRS"
   create_option        = var.osdisk.create_option
   disk_size_gb         = var.osdisk.size
 
