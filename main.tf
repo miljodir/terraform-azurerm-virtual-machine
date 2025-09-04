@@ -118,20 +118,20 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = azurerm_managed_disk.osdisk_create[0].id != null ? var.admin_username : null
+  admin_username                                         = azurerm_managed_disk.osdisk_create[0].id == null ? var.admin_username : null
   admin_password                                         = var.disable_password_authentication != true && var.admin_password == null ? try(random_password.passwd[0].result, null) : var.admin_password
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id != null ? var.provision_vm_agent : null
+  provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id == null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
   availability_set_id                                    = var.availability_set_id
   zone                                                   = var.availability_zone
   tags                                                   = var.tags
-  patch_mode                                             = var.patch_mode
-  patch_assessment_mode                                  = var.patch_assessment_mode
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
+  patch_mode                                             = azurerm_managed_disk.osdisk_create[0].id == null ? var.patch_mode : null
+  patch_assessment_mode                                  = azurerm_managed_disk.osdisk_create[0].id == null ? var.patch_assessment_mode : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = azurerm_managed_disk.osdisk_create[0].id == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
   disk_controller_type                                   = var.disk_controller_type
@@ -204,17 +204,17 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   admin_password                                         = var.admin_password == null ? random_password.passwd[0].result : var.admin_password
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id != null ? var.provision_vm_agent : null
+  provision_vm_agent                                     = azurerm_managed_disk.osdisk_create[0].id == null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
   license_type                                           = var.license_type
   availability_set_id                                    = var.availability_set_id
   zone                                                   = var.availability_zone
-  patch_mode                                             = var.patch_mode
-  patch_assessment_mode                                  = var.patch_assessment_mode
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
-  enable_automatic_updates                               = var.enable_automatic_updates
+  patch_mode                                             = azurerm_managed_disk.osdisk_create[0].id == null ? var.patch_mode : null
+  patch_assessment_mode                                  = azurerm_managed_disk.osdisk_create[0].id == null ? var.patch_assessment_mode : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = azurerm_managed_disk.osdisk_create[0].id == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  enable_automatic_updates                               = azurerm_managed_disk.osdisk_create[0].id == null ? var.enable_automatic_updates : null
   timezone                                               = var.timezone
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
@@ -233,11 +233,14 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
     }
   }
 
-  os_disk {
-    storage_account_type = var.os_disk_storage_account_type
-    caching              = "ReadWrite"
-    name                 = var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
-    disk_size_gb         = var.os_disk_size_gb
+  dynamic "os_disk" {
+    for_each = var.os_disk_size_gb == null ? [] : [1]
+    content {
+      storage_account_type = var.os_disk_storage_account_type
+      caching              = "ReadWrite"
+      name                 = var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
+      disk_size_gb         = var.os_disk_size_gb
+    }
   }
 
   dynamic "additional_capabilities" {
