@@ -49,6 +49,10 @@ resource "azurerm_network_interface" "nic" {
     private_ip_address_allocation = var.private_ip_address_allocation_type
     private_ip_address            = var.private_ip_address_allocation_type == "Static" ? var.private_ip_address : null
   }
+
+  lifecycle {
+    ignore_changes = [ ip_configuration[0].name ]
+  }
 }
 
 #---------------------------------------
