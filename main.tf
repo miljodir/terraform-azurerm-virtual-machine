@@ -51,7 +51,7 @@ resource "azurerm_network_interface" "nic" {
   }
 
   lifecycle {
-    ignore_changes = [ ip_configuration.name ]
+    ignore_changes = [ ip_configuration[0].name ]
   }
 }
 
