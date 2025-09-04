@@ -417,3 +417,9 @@ variable "disk_controller_type" {
   }
 
 }
+
+variable "os_managed_disk_id" {
+  type        = string
+  description = "The ID of an existing Managed Disk to use as the OS disk to use."
+  default     = null
+}

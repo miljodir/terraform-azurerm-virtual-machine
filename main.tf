@@ -107,6 +107,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
   disk_controller_type                                   = var.disk_controller_type
+  os_managed_disk_id                                     = var.os_managed_disk_id
 
   admin_ssh_key {
     username   = var.admin_username
@@ -189,6 +190,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   hotpatching_enabled                                    = var.hotpatching_enabled
   tags                                                   = var.tags
   disk_controller_type                                   = var.disk_controller_type
+  os_managed_disk_id                                     = var.os_managed_disk_id
 
   source_image_reference {
     publisher = local.image["publisher"]
