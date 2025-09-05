@@ -64,7 +64,7 @@ resource "azurerm_managed_disk" "osdisk_create" {
   name                 = var.osdisk.override_name != null ? var.osdisk.override_name : "${var.virtual_machine_name}-osdisk"
   location             = var.location
   resource_group_name  = var.resource_group_name
-  storage_account_type = "StandardSSD_LRS"
+  storage_account_type = var.os_disk_storage_account_type
   create_option        = var.osdisk.create_option
   disk_size_gb         = var.os_disk_size_gb
   os_type              = var.os_flavor == "windows" ? "Windows" : "Linux"
@@ -81,6 +81,9 @@ resource "azurerm_managed_disk" "osdisk_create" {
       trusted_launch_enabled,
       upload_size_bytes,
       tags,
+      storage_account_type,
+      image_reference_id,
+      resource_group_name,
 
     ]
   }
