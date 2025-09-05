@@ -51,7 +51,7 @@ resource "azurerm_network_interface" "nic" {
   }
 
   lifecycle {
-    ignore_changes = [ ip_configuration[0].name ]
+    ignore_changes = [ip_configuration[0].name]
   }
 }
 
@@ -64,7 +64,7 @@ resource "azurerm_managed_disk" "osdisk_create" {
   name                 = var.osdisk.override_name != null ? var.osdisk.override_name : "${var.virtual_machine_name}-osdisk"
   location             = var.location
   resource_group_name  = var.resource_group_name
-  storage_account_type = "StandardSSD_LRS"
+  storage_account_type = var.os_disk_storage_account_type
   create_option        = var.osdisk.create_option
   disk_size_gb         = var.os_disk_size_gb
   os_type              = var.os_flavor == "windows" ? "Windows" : "Linux"
@@ -81,6 +81,9 @@ resource "azurerm_managed_disk" "osdisk_create" {
       trusted_launch_enabled,
       upload_size_bytes,
       tags,
+      storage_account_type,
+      image_reference_id,
+      resource_group_name,
 
     ]
   }
@@ -216,7 +219,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   zone                                                   = var.availability_zone
   patch_mode                                             = var.osdisk == null ? var.patch_mode : null
   patch_assessment_mode                                  = var.osdisk == null ? var.patch_assessment_mode : null
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
   enable_automatic_updates                               = var.osdisk == null ? var.enable_automatic_updates : null
   timezone                                               = var.timezone
   secure_boot_enabled                                    = var.secure_boot_enabled
@@ -268,6 +271,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
       identity,
       secure_boot_enabled, # Gen2 VMs only
       vtpm_enabled,        # Gen2 VMs only
+      boot_diagnostics,
     ]
   }
 }
