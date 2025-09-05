@@ -137,7 +137,7 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   zone                                                   = var.availability_zone
   patch_mode                                             = var.osdisk == null ? var.patch_mode : null
   patch_assessment_mode                                  = var.osdisk == null ? var.patch_assessment_mode : null
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
   secure_boot_enabled                                    = var.secure_boot_enabled
   vtpm_enabled                                           = var.vtpm_enabled
   disk_controller_type                                   = var.disk_controller_type
