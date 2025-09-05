@@ -219,7 +219,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   zone                                                   = var.availability_zone
   patch_mode                                             = var.osdisk == null ? var.patch_mode : null
   patch_assessment_mode                                  = var.osdisk == null ? var.patch_assessment_mode : null
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
   enable_automatic_updates                               = var.osdisk == null ? var.enable_automatic_updates : null
   timezone                                               = var.timezone
   secure_boot_enabled                                    = var.secure_boot_enabled
