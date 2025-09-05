@@ -271,6 +271,7 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
       identity,
       secure_boot_enabled, # Gen2 VMs only
       vtpm_enabled,        # Gen2 VMs only
+      bypass_platform_safety_checks_on_user_schedule_enabled,
     ]
   }
 }
