@@ -66,3 +66,62 @@ You can use this with GitHub Actions workflows by passing the power action as a 
 ```
 
 This allows you to control VM power states dynamically based on your CI/CD pipeline needs.
+
+### Complete Example
+
+```hcl
+module "dev_vm" {
+  source  = "miljodir/virtual-machine/azurerm"
+  version = "~> 1.0"
+
+  resource_group_name  = "my-resource-group"
+  virtual_machine_name = "dev-vm-001"
+  location             = "norwayeast"
+  subnet_id            = azurerm_subnet.example.id
+  
+  os_flavor                   = "linux"
+  linux_distribution_name     = "ubuntu2404"
+  virtual_machine_size        = "Standard_B2as_v2"
+  admin_username              = "adminuser"
+  generate_admin_ssh_key      = true
+  
+  # Enable AAD login extension
+  enable_aad_login = true
+  
+  # Power off the VM after deployment to save costs
+  vm_power_action = "power_off"
+  
+  tags = {
+    Environment = "Development"
+    ManagedBy   = "Terraform"
+  }
+}
+```
+
+### Use Cases
+
+1. **Cost Optimization**: Power off development/test VMs outside business hours:
+   ```bash
+   # Morning: Power on the VM
+   terraform apply -var="vm_power_action=power_on"
+   
+   # Evening: Power off the VM
+   terraform apply -var="vm_power_action=power_off"
+   ```
+
+2. **Maintenance**: Restart VMs after applying configuration changes:
+   ```hcl
+   vm_power_action = "restart"
+   ```
+
+3. **CI/CD Integration**: Dynamically control VM states based on pipeline variables:
+   ```yaml
+   jobs:
+     deploy:
+       steps:
+         - name: Deploy with Power Action
+           run: |
+             terraform apply \
+               -var="vm_power_action=${{ github.event.inputs.power_action }}" \
+               -auto-approve
+   ```
