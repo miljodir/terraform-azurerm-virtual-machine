@@ -14,7 +14,16 @@ resource "azurerm_virtual_machine_extension" "aad_extension_windows" {
   virtual_machine_id         = azurerm_windows_virtual_machine.win_vm[0].id
 
   settings = local.mdm_settings
+
+  lifecycle {
+    action_trigger {
+      events  = [before_update]
+      actions = [action.azurerm_virtual_machine_power.power_on]
+    }
+  }
 }
+
+
 #--------------------------------------------------------------
 # Enable AAD Login for Linux
 #--------------------------------------------------------------
@@ -26,6 +35,13 @@ resource "azurerm_virtual_machine_extension" "aad_extension_linux" {
   type_handler_version       = "1.0"
   auto_upgrade_minor_version = true
   virtual_machine_id         = azurerm_linux_virtual_machine.linux_vm[0].id
+
+  lifecycle {
+    action_trigger {
+      events  = [before_update]
+      actions = [action.azurerm_virtual_machine_power.power_on]
+    }
+  }
 }
 
 #--------------------------------------------------------------
@@ -53,6 +69,13 @@ resource "azurerm_virtual_machine_extension" "extension" {
       source_vault_id = var.vm_extension.protected_settings_from_key_vault.source_vault_id
     }
   }
+
+  lifecycle {
+    action_trigger {
+      events  = [before_update]
+      actions = [action.azurerm_virtual_machine_power.power_on]
+    }
+  }
 }
 
 #--------------------------------------------------------------
@@ -77,6 +100,13 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_windows" {
     "VolumeType" : var.volume_type
   })
 
+  lifecycle {
+    action_trigger {
+      events  = [before_update]
+      actions = [action.azurerm_virtual_machine_power.power_on]
+    }
+  }
+
   tags = var.tags
 }
 
@@ -98,6 +128,13 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_linux" {
     "KeyEncryptionAlgorithm" : var.encryption_algorithm,
     "VolumeType" : var.volume_type
   })
+
+  lifecycle {
+    action_trigger {
+      events  = [before_update]
+      actions = [action.azurerm_virtual_machine_power.power_on]
+    }
+  }
 
   tags = var.tags
 }
@@ -122,6 +159,13 @@ resource "azurerm_virtual_machine_extension" "custom_script_extension" {
     "managedIdentity" : {}
   })
   depends_on = [azurerm_role_assignment.role]
+
+  lifecycle {
+    action_trigger {
+      events  = [before_update]
+      actions = [action.azurerm_virtual_machine_power.power_on]
+    }
+  }
 }
 
 #--------------------------------------------------------------
@@ -151,6 +195,10 @@ resource "azurerm_virtual_machine_extension" "avd_register_session_host" {
 
   lifecycle {
     ignore_changes = [type_handler_version, settings, protected_settings, tags]
+    action_trigger {
+      events  = [before_update]
+      actions = [action.azurerm_virtual_machine_power.power_on]
+    }
   }
   depends_on = [azurerm_virtual_machine_extension.aad_extension_windows]
 }

@@ -4,7 +4,7 @@
 
 # User-controlled power action
 # This action runs after all extensions are applied
-action "azurerm_virtual_machine_power" "user_action" {
+action "azurerm_virtual_machine_power" "power_action" {
   count = var.vm_power_action != null ? 1 : 0
 
   config {
