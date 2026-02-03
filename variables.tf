@@ -433,3 +433,13 @@ variable "nic_name" {
   description = "Override the network interface name. If not set, the name will be generated from the virtual machine name."
   default     = null
 }
+
+variable "vm_power_action" {
+  type        = string
+  description = "The power action to perform on the VM. Possible values are 'power_on', 'power_off', or 'restart'. If not specified, no power action is taken."
+  default     = "power_on"
+  validation {
+    condition     = var.vm_power_action == null || var.vm_power_action == "power_on" || var.vm_power_action == "power_off" || var.vm_power_action == "restart"
+    error_message = "vm_power_action must be either null, 'power_on', 'power_off', or 'restart'"
+  }
+}
