@@ -15,12 +15,6 @@ resource "azurerm_virtual_machine_extension" "aad_extension_windows" {
 
   settings = local.mdm_settings
 
-  lifecycle {
-    action_trigger {
-      events  = [before_create, before_update]
-      actions = [action.azurerm_virtual_machine_power.power_action[0]]
-    }
-  }
 }
 
 
@@ -36,12 +30,6 @@ resource "azurerm_virtual_machine_extension" "aad_extension_linux" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = azurerm_linux_virtual_machine.linux_vm[0].id
 
-  lifecycle {
-    action_trigger {
-      events  = [before_create, before_update]
-      actions = [action.azurerm_virtual_machine_power.power_action[0]]
-    }
-  }
 }
 
 #--------------------------------------------------------------
@@ -70,12 +58,6 @@ resource "azurerm_virtual_machine_extension" "extension" {
     }
   }
 
-  lifecycle {
-    action_trigger {
-      events  = [before_create, before_update]
-      actions = [action.azurerm_virtual_machine_power.power_action[0]]
-    }
-  }
 }
 
 #--------------------------------------------------------------
@@ -100,12 +82,6 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_windows" {
     "VolumeType" : var.volume_type
   })
 
-  lifecycle {
-    action_trigger {
-      events  = [before_create, before_update]
-      actions = [action.azurerm_virtual_machine_power.power_action[0]]
-    }
-  }
 
   tags = var.tags
 }
@@ -129,12 +105,6 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_linux" {
     "VolumeType" : var.volume_type
   })
 
-  lifecycle {
-    action_trigger {
-      events  = [before_create, before_update]
-      actions = [action.azurerm_virtual_machine_power.power_action[0]]
-    }
-  }
 
   tags = var.tags
 }
@@ -160,12 +130,6 @@ resource "azurerm_virtual_machine_extension" "custom_script_extension" {
   })
   depends_on = [azurerm_role_assignment.role]
 
-  lifecycle {
-    action_trigger {
-      events  = [before_create, before_update]
-      actions = [action.azurerm_virtual_machine_power.power_action[0]]
-    }
-  }
 }
 
 #--------------------------------------------------------------
