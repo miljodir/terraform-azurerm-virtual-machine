@@ -25,7 +25,7 @@ resource "azurerm_virtual_machine_extension" "aad_extension_windows" {
   virtual_machine_id         = azurerm_windows_virtual_machine.win_vm[0].id
 
   settings   = local.mdm_settings
-  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
+  depends_on = [terraform_data.power_action_gate[0]]
 
 }
 
@@ -42,7 +42,7 @@ resource "azurerm_virtual_machine_extension" "aad_extension_linux" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = azurerm_linux_virtual_machine.linux_vm[0].id
 
-  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
+  depends_on = [terraform_data.power_action_gate[0]]
 
 }
 
@@ -72,7 +72,7 @@ resource "azurerm_virtual_machine_extension" "extension" {
     }
   }
 
-  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
+  depends_on = [terraform_data.power_action_gate[0]]
 
 }
 
@@ -99,7 +99,7 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_windows" {
   })
 
   tags       = var.tags
-  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
+  depends_on = [terraform_data.power_action_gate[0]]
 
 }
 
@@ -123,7 +123,7 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_linux" {
   })
 
   tags       = var.tags
-  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
+  depends_on = [terraform_data.power_action_gate[0]]
 
 }
 
