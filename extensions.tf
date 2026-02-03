@@ -18,7 +18,7 @@ resource "azurerm_virtual_machine_extension" "aad_extension_windows" {
   lifecycle {
     action_trigger {
       events  = [before_update]
-      actions = [action.azurerm_virtual_machine_power.power_on[0]]
+      actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }
 }
@@ -39,7 +39,7 @@ resource "azurerm_virtual_machine_extension" "aad_extension_linux" {
   lifecycle {
     action_trigger {
       events  = [before_update]
-      actions = [action.azurerm_virtual_machine_power.power_on[0]]
+      actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }
 }
@@ -73,7 +73,7 @@ resource "azurerm_virtual_machine_extension" "extension" {
   lifecycle {
     action_trigger {
       events  = [before_update]
-      actions = [action.azurerm_virtual_machine_power.power_on[0]]
+      actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }
 }
@@ -103,7 +103,7 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_windows" {
   lifecycle {
     action_trigger {
       events  = [before_update]
-      actions = [action.azurerm_virtual_machine_power.power_on[0]]
+      actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }
 
@@ -132,7 +132,7 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_linux" {
   lifecycle {
     action_trigger {
       events  = [before_update]
-      actions = [action.azurerm_virtual_machine_power.power_on[0]]
+      actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }
 
@@ -163,7 +163,7 @@ resource "azurerm_virtual_machine_extension" "custom_script_extension" {
   lifecycle {
     action_trigger {
       events  = [before_update]
-      actions = [action.azurerm_virtual_machine_power.power_on[0]]
+      actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }
 }
@@ -197,7 +197,7 @@ resource "azurerm_virtual_machine_extension" "avd_register_session_host" {
     ignore_changes = [type_handler_version, settings, protected_settings, tags]
     action_trigger {
       events  = [before_update]
-      actions = [action.azurerm_virtual_machine_power.power_on[0]]
+      actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }
   depends_on = [azurerm_virtual_machine_extension.aad_extension_windows]
