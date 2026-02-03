@@ -4,18 +4,16 @@
 
 # This action ensures only a single power action is performed if any of the VM extensions are updated
 
-resource "terraform_data" "extension_trigger" {
-  triggers_replace = [
-    azurerm_virtual_machine_extension.aad_extension_windows[0],
-    azurerm_virtual_machine_extension.aad_extension_linux[0],
-    azurerm_virtual_machine_extension.extension[0],
-    azurerm_virtual_machine_extension.custom_script_extension[0],
-    azurerm_virtual_machine_extension.avd_register_session_host[0],
-  ]
+resource "terraform_data" "power_action_gate" {
+  count = var.vm_power_action == "power_on" ? 1 : 0
+
+  triggers_replace = {
+    extensions = local.extension_power_triggers
+  }
 
   lifecycle {
     action_trigger {
-      events  = [before_create]
+      events  = [before_create, before_update]
       actions = [action.azurerm_virtual_machine_power.power_action[0]]
     }
   }

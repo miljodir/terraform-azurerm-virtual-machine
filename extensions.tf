@@ -3,7 +3,18 @@
 #--------------------------------------------------------------
 locals {
   mdm_settings = local.image["offer"] == "Windows-11" || local.image["offer"] == "Windows-10" ? jsonencode({ "mdmId" = "0000000a-0000-0000-c000-000000000000" }) : null
+
+  # Ensure power on to the vm is run before changes to any of these are changed
+  extension_power_triggers = jsonencode({
+    enable_aad_login          = var.enable_aad_login
+    vm_extension              = var.vm_extension
+    enable_disk_encryption    = var.enable_disk_encryption
+    type_handler_version      = var.type_handler_version
+    custom_script_extension   = var.custom_script_extension
+    avd_register_session_host = var.avd_register_session_host
+  })
 }
+
 resource "azurerm_virtual_machine_extension" "aad_extension_windows" {
   count                      = var.os_flavor == "windows" && var.enable_aad_login == true ? 1 : 0
   name                       = "AADLoginForWindows"
@@ -13,7 +24,8 @@ resource "azurerm_virtual_machine_extension" "aad_extension_windows" {
   auto_upgrade_minor_version = true
   virtual_machine_id         = azurerm_windows_virtual_machine.win_vm[0].id
 
-  settings = local.mdm_settings
+  settings   = local.mdm_settings
+  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
 
 }
 
@@ -29,6 +41,8 @@ resource "azurerm_virtual_machine_extension" "aad_extension_linux" {
   type_handler_version       = "1.0"
   auto_upgrade_minor_version = true
   virtual_machine_id         = azurerm_linux_virtual_machine.linux_vm[0].id
+
+  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
 
 }
 
@@ -58,6 +72,8 @@ resource "azurerm_virtual_machine_extension" "extension" {
     }
   }
 
+  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
+
 }
 
 #--------------------------------------------------------------
@@ -82,8 +98,9 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_windows" {
     "VolumeType" : var.volume_type
   })
 
+  tags       = var.tags
+  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
 
-  tags = var.tags
 }
 
 resource "azurerm_virtual_machine_extension" "disk_encryption_linux" {
@@ -105,8 +122,9 @@ resource "azurerm_virtual_machine_extension" "disk_encryption_linux" {
     "VolumeType" : var.volume_type
   })
 
+  tags       = var.tags
+  depends_on = var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : []
 
-  tags = var.tags
 }
 
 #--------------------------------------------------------------
@@ -128,7 +146,10 @@ resource "azurerm_virtual_machine_extension" "custom_script_extension" {
     "fileUris" : var.custom_script_extension["script_urls"],
     "managedIdentity" : {}
   })
-  depends_on = [azurerm_role_assignment.role]
+  depends_on = concat(
+    var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : [],
+    [azurerm_role_assignment.role]
+  )
 
 }
 
@@ -159,10 +180,9 @@ resource "azurerm_virtual_machine_extension" "avd_register_session_host" {
 
   lifecycle {
     ignore_changes = [type_handler_version, settings, protected_settings, tags]
-    action_trigger {
-      events  = [before_create, before_update]
-      actions = [action.azurerm_virtual_machine_power.power_action[0]]
-    }
   }
-  depends_on = [azurerm_virtual_machine_extension.aad_extension_windows]
+  depends_on = concat(
+    var.vm_power_action != null ? [terraform_data.power_action_gate[0]] : [],
+    [azurerm_virtual_machine_extension.aad_extension_windows]
+  )
 }
