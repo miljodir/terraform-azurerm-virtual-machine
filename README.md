@@ -24,7 +24,7 @@ This module now supports controlling the power state of VMs via the `vm_power_ac
 
 ### Requirements
 
-- Terraform >= 1.14 (for action support)
+- Terraform ~> 1.14 (for action support)
 - AzureRM provider > 3.0, < 5.0
 
 ### Usage
@@ -100,28 +100,10 @@ module "dev_vm" {
 
 ### Use Cases
 
-1. **Cost Optimization**: Power off development/test VMs outside business hours:
    ```bash
    # Morning: Power on the VM
-   terraform apply -var="vm_power_action=power_on"
+   terraform apply -var="vm_power_action=power_on" -invoke="module.test_vm.action.azurerm_virtual_machine_power.power_action[0]"
    
    # Evening: Power off the VM
-   terraform apply -var="vm_power_action=power_off"
-   ```
-
-2. **Maintenance**: Restart VMs after applying configuration changes:
-   ```hcl
-   vm_power_action = "restart"
-   ```
-
-3. **CI/CD Integration**: Dynamically control VM states based on pipeline variables:
-   ```yaml
-   jobs:
-     deploy:
-       steps:
-         - name: Deploy with Power Action
-           run: |
-             terraform apply \
-               -var="vm_power_action=${{ github.event.inputs.power_action }}" \
-               -auto-approve
+   terraform apply -var="vm_power_action=power_off" -invoke="module.test_vm.action.azurerm_virtual_machine_power.power_action[0]"
    ```

@@ -146,7 +146,7 @@ resource "azurerm_virtual_machine_extension" "custom_script_extension" {
     "fileUris" : var.custom_script_extension["script_urls"],
     "managedIdentity" : {}
   })
-  depends_on = [terraform_data.power_action_gate[0]]
+  depends_on = [azurerm_role_assignment.role, terraform_data.power_action_gate[0]]
 }
 
 #--------------------------------------------------------------
@@ -177,5 +177,5 @@ resource "azurerm_virtual_machine_extension" "avd_register_session_host" {
   lifecycle {
     ignore_changes = [type_handler_version, settings, protected_settings, tags]
   }
-  depends_on = [terraform_data.power_action_gate[0]]
+  depends_on = [azurerm_virtual_machine_extension.aad_extension_windows, terraform_data.power_action_gate[0]]
 }
