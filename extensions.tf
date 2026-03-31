@@ -9,9 +9,7 @@ locals {
     enable_aad_login          = var.enable_aad_login
     vm_extension              = var.vm_extension
     enable_disk_encryption    = var.enable_disk_encryption
-    type_handler_version      = var.type_handler_version
     custom_script_extension   = var.custom_script_extension
-    avd_register_session_host = var.avd_register_session_host
   })
 }
 
