@@ -44,6 +44,17 @@ These are unit-style tests: they verify how the module turns inputs into
 resource configuration. They do not prove that Azure accepts the configuration;
 that still happens when a consuming workload runs `terraform plan`/`apply`.
 
+## OpenTofu compatibility
+
+CI currently runs Terraform only. The latest OpenTofu release checked (1.13.9)
+cannot initialize this module: it rejects the `action_trigger` and `action`
+blocks in `vm_power.tf`, and the `state_key` argument in the test suite. The
+module also requires Terraform `~> 1.14`, which does not include OpenTofu 1.13.9.
+The test workflow therefore does not claim OpenTofu compatibility. Do not remove
+the production power-action behavior or weaken the version constraint to make an
+OpenTofu run pass; enable OpenTofu only when the engine supports the complete
+module and test configuration.
+
 ## Writing a test
 
 ```hcl
@@ -83,7 +94,8 @@ Guidelines:
 
 ## Running locally
 
-Requires Terraform >= 1.7.
+Requires Terraform `~> 1.14` for this module (mock-provider tests require
+Terraform >= 1.7).
 
 ```sh
 terraform init -backend=false
