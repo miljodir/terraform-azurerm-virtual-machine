@@ -113,33 +113,40 @@ New-Item -ItemType Directory -Path $testRoot | Out-Null
 git archive --format=zip --output=$archive HEAD
 if ($LASTEXITCODE -ne 0) { throw "Could not archive the checked-in module." }
 Expand-Archive -LiteralPath $archive -DestinationPath $module
-Set-Location $module
-terraform init -backend=false
-if ($LASTEXITCODE -ne 0) { throw "terraform init failed." }
-terraform validate
-if ($LASTEXITCODE -ne 0) { throw "terraform validate failed." }
-if (Test-Path .\virtual_machine_output_override.tf) { throw "Unexpected override already exists; refusing to overwrite it." }
-Copy-Item tests\overrides\virtual_machine_output_override.tf .
-terraform test '-filter=tests\virtual_machine.tftest.hcl'
-if ($LASTEXITCODE -ne 0) { throw "terraform test failed." }
+Push-Location $module
+try {
+  terraform init -backend=false
+  if ($LASTEXITCODE -ne 0) { throw "terraform init failed." }
+  terraform validate
+  if ($LASTEXITCODE -ne 0) { throw "terraform validate failed." }
+  if (Test-Path .\virtual_machine_output_override.tf) { throw "Unexpected override already exists; refusing to overwrite it." }
+  Copy-Item tests\overrides\virtual_machine_output_override.tf .
+  terraform test '-filter=tests\virtual_machine.tftest.hcl'
+  if ($LASTEXITCODE -ne 0) { throw "terraform test failed." }
+}
+finally {
+  Pop-Location
+}
 ```
 
 Bash (Linux/macOS/Git Bash):
 
 ```sh
-set -euo pipefail
-test_root="$(mktemp -d)"
-git archive HEAD | tar -x -C "$test_root"
-cd "$test_root"
-terraform init -backend=false
-terraform validate
-test ! -e virtual_machine_output_override.tf || { echo "Unexpected override already exists; refusing to overwrite it." >&2; exit 1; }
-cp tests/overrides/virtual_machine_output_override.tf .
-case "$(uname -s)" in
-  MINGW*|MSYS*|CYGWIN*) test_file='tests\virtual_machine.tftest.hcl' ;;
-  *) test_file='tests/virtual_machine.tftest.hcl' ;;
-esac
-terraform test "-filter=$test_file"
+(
+  set -euo pipefail
+  test_root="$(mktemp -d)"
+  git archive HEAD | tar -x -C "$test_root"
+  cd "$test_root"
+  terraform init -backend=false
+  terraform validate
+  test ! -e virtual_machine_output_override.tf || { echo "Unexpected override already exists; refusing to overwrite it." >&2; exit 1; }
+  cp tests/overrides/virtual_machine_output_override.tf .
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) test_file='tests\virtual_machine.tftest.hcl' ;;
+    *) test_file='tests/virtual_machine.tftest.hcl' ;;
+  esac
+  terraform test "-filter=$test_file"
+)
 ```
 
 The test-only output override is copied only after validation, since it is for
