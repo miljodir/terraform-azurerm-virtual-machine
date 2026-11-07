@@ -2,7 +2,6 @@ name: Terraform tests
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -16,7 +15,7 @@ concurrency:
 
 jobs:
   test:
-    uses: miljodir/workflow-templates/.github/workflows/terraform-test.yaml@30a395d5fc04a6f381458d8f6de02a823fe73d19
+    uses: miljodir/workflow-templates/.github/workflows/terraform-test.yaml@terraform-test/v0
     with:
       engine: terraform
       terraform-version: "1.x"

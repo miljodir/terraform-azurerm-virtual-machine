@@ -2,7 +2,8 @@
 
 This module is tested with the native [`terraform test`](https://developer.hashicorp.com/terraform/language/tests)
 framework. Tests run automatically in GitHub Actions on every pull request to
-`main` (see `.github/workflows/terraform-test.yaml`).
+any target branch and on pushes to `main` (see
+`.github/workflows/terraform-test.yaml`).
 
 ## What runs in CI
 
