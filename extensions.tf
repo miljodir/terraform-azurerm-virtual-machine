@@ -6,10 +6,10 @@ locals {
 
   # Ensure power on to the vm is run before changes to any of these are changed
   extension_power_triggers = jsonencode({
-    enable_aad_login          = var.enable_aad_login
-    vm_extension              = var.vm_extension
-    enable_disk_encryption    = var.enable_disk_encryption
-    custom_script_extension   = var.custom_script_extension
+    enable_aad_login        = var.enable_aad_login
+    vm_extension            = var.vm_extension
+    enable_disk_encryption  = var.enable_disk_encryption
+    custom_script_extension = var.custom_script_extension
   })
 }
 
