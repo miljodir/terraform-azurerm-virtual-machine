@@ -247,9 +247,152 @@ run "datadisks" {
   }
 }
 
+run "windows_identity_disabled" {
+  command   = apply
+  state_key = "windows_identity"
+
+  assert {
+    condition     = length(azurerm_windows_virtual_machine.win_vm[0].identity) == 0
+    error_message = "The existing Windows VM must start without an identity."
+  }
+}
+
+run "windows_enable_existing_identity_plan" {
+  command   = plan
+  state_key = "windows_identity"
+
+  variables {
+    enable_managed_identity = true
+    secure_boot_enabled     = false
+    vtpm_enabled            = false
+  }
+
+  assert {
+    condition     = try(azurerm_windows_virtual_machine.win_vm[0].identity[0].type == "SystemAssigned", false)
+    error_message = "Enabling identity must appear in the plan for an existing Windows VM."
+  }
+
+  assert {
+    condition     = azurerm_windows_virtual_machine.win_vm[0].secure_boot_enabled && azurerm_windows_virtual_machine.win_vm[0].vtpm_enabled
+    error_message = "Enabling identity must preserve the Windows secure boot and vTPM lifecycle exclusions."
+  }
+}
+
+run "windows_enable_existing_identity_apply" {
+  command   = apply
+  state_key = "windows_identity"
+
+  variables {
+    enable_managed_identity = true
+  }
+
+  assert {
+    condition     = try(azurerm_windows_virtual_machine.win_vm[0].identity[0].type == "SystemAssigned", false)
+    error_message = "Applying enabled identity must update the existing Windows VM."
+  }
+}
+
+run "windows_disable_existing_identity_plan" {
+  command   = plan
+  state_key = "windows_identity"
+
+  assert {
+    condition     = length(azurerm_windows_virtual_machine.win_vm[0].identity) == 0
+    error_message = "Disabling identity must appear in the plan for an existing Windows VM."
+  }
+}
+
+run "windows_disable_existing_identity_apply" {
+  command   = apply
+  state_key = "windows_identity"
+
+  assert {
+    condition     = length(azurerm_windows_virtual_machine.win_vm[0].identity) == 0
+    error_message = "Applying disabled identity must remove the existing Windows VM identity."
+  }
+}
+
+run "linux_identity_disabled" {
+  command   = apply
+  state_key = "linux_identity"
+
+  variables {
+    os_flavor = "linux"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_virtual_machine.linux_vm[0].identity) == 0
+    error_message = "The existing Linux VM must start without an identity."
+  }
+}
+
+run "linux_enable_existing_identity_plan" {
+  command   = plan
+  state_key = "linux_identity"
+
+  variables {
+    os_flavor               = "linux"
+    enable_managed_identity = true
+    secure_boot_enabled     = false
+    vtpm_enabled            = false
+  }
+
+  assert {
+    condition     = try(azurerm_linux_virtual_machine.linux_vm[0].identity[0].type == "SystemAssigned", false)
+    error_message = "Enabling identity must appear in the plan for an existing Linux VM."
+  }
+
+  assert {
+    condition     = azurerm_linux_virtual_machine.linux_vm[0].secure_boot_enabled && azurerm_linux_virtual_machine.linux_vm[0].vtpm_enabled
+    error_message = "Enabling identity must preserve the Linux secure boot and vTPM lifecycle exclusions."
+  }
+}
+
+run "linux_enable_existing_identity_apply" {
+  command   = apply
+  state_key = "linux_identity"
+
+  variables {
+    os_flavor               = "linux"
+    enable_managed_identity = true
+  }
+
+  assert {
+    condition     = try(azurerm_linux_virtual_machine.linux_vm[0].identity[0].type == "SystemAssigned", false)
+    error_message = "Applying enabled identity must update the existing Linux VM."
+  }
+}
+
+run "linux_disable_existing_identity_plan" {
+  command   = plan
+  state_key = "linux_identity"
+
+  variables {
+    os_flavor = "linux"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_virtual_machine.linux_vm[0].identity) == 0
+    error_message = "Disabling identity must appear in the plan for an existing Linux VM."
+  }
+}
+
+run "linux_disable_existing_identity_apply" {
+  command   = apply
+  state_key = "linux_identity"
+
+  variables {
+    os_flavor = "linux"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_virtual_machine.linux_vm[0].identity) == 0
+    error_message = "Applying disabled identity must remove the existing Linux VM identity."
+  }
+}
+
 run "identity_and_roles" {
-  command = apply
-  # identity is in ignore_changes, so it must be enabled on a fresh VM rather than an update.
+  command   = apply
   state_key = "identity"
 
   variables {
