@@ -135,6 +135,7 @@ Bash (Linux/macOS/Git Bash):
 (
   set -euo pipefail
   test_root="$(mktemp -d)"
+  printf 'Disposable test copy: %s\n' "$test_root"
   git archive HEAD | tar -x -C "$test_root"
   cd "$test_root"
   terraform init -backend=false
