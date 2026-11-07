@@ -124,7 +124,7 @@ terraform test '-filter=tests\virtual_machine.tftest.hcl'
 if ($LASTEXITCODE -ne 0) { throw "terraform test failed." }
 ```
 
-Bash (Linux/macOS):
+Bash (Linux/macOS/Git Bash):
 
 ```sh
 set -euo pipefail
@@ -135,7 +135,11 @@ terraform init -backend=false
 terraform validate
 test ! -e virtual_machine_output_override.tf || { echo "Unexpected override already exists; refusing to overwrite it." >&2; exit 1; }
 cp tests/overrides/virtual_machine_output_override.tf .
-terraform test -filter=tests/virtual_machine.tftest.hcl
+case "$(uname -s)" in
+  MINGW*|MSYS*|CYGWIN*) test_file='tests\virtual_machine.tftest.hcl' ;;
+  *) test_file='tests/virtual_machine.tftest.hcl' ;;
+esac
+terraform test "-filter=$test_file"
 ```
 
 The test-only output override is copied only after validation, since it is for
