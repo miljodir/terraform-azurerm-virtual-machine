@@ -98,14 +98,42 @@ Guidelines:
 Requires Terraform `~> 1.14` for this module (mock-provider tests require
 Terraform >= 1.7).
 
+Run these commands from the module root. Initialization does not contact Azure.
+The test-only override is needed because Terraform treats this module as the
+root module during tests:
+
 ```sh
 terraform init -backend=false
-terraform test            # all tests
-terraform test -verbose   # include plan output
-terraform test -filter=tests/defaults.tftest.hcl
 ```
 
-Remove the copied `*_override.tf` files afterwards (they are git-ignored).
+Copy the test-only output override into the module root. In PowerShell:
+
+```powershell
+Copy-Item tests\overrides\virtual_machine_output_override.tf .
+```
+
+In Bash (Linux/macOS):
+
+```sh
+cp tests/overrides/virtual_machine_output_override.tf .
+```
+
+Run the complete suite with `terraform test`. To run just this module's test
+file, use the path separator for your shell/platform:
+
+```powershell
+terraform test '-filter=tests\virtual_machine.tftest.hcl'
+```
+
+```sh
+terraform test -filter=tests/virtual_machine.tftest.hcl
+```
+
+A successful command is not enough by itself: confirm Terraform reports at least
+one passing run, such as `Success! 14 passed, 0 failed` (the count may change as
+tests are added). A command that exits successfully but runs zero tests does not
+provide test coverage. The CI workflow enforces a nonzero passing-run count.
+Remove the copied `*_override.tf` file after testing; it is git-ignored.
 
 If the module references internal modules over SSH, you need SSH access to
 GitHub for `terraform init` to download them.
