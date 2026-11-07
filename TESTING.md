@@ -98,42 +98,56 @@ Guidelines:
 Requires Terraform `~> 1.14` for this module (mock-provider tests require
 Terraform >= 1.7).
 
-Run these commands from the module root. Initialization does not contact Azure.
-The test-only override is needed because Terraform treats this module as the
-root module during tests:
+For a safe local run, use a disposable copy of the checked-in files. This avoids
+touching existing files in your checkout, including any local Terraform
+overrides. Run the following from the module's Git repository root. The archive
+contains files committed at `HEAD`; uncommitted changes are not included.
 
-```sh
+PowerShell:
+
+```powershell
+$testRoot = Join-Path $env:TEMP ("terraform-test-" + [guid]::NewGuid().ToString())
+$module = Join-Path $testRoot "module"
+$archive = Join-Path $testRoot "module.zip"
+New-Item -ItemType Directory -Path $testRoot | Out-Null
+git archive --format=zip --output=$archive HEAD
+if ($LASTEXITCODE -ne 0) { throw "Could not archive the checked-in module." }
+Expand-Archive -LiteralPath $archive -DestinationPath $module
+Set-Location $module
 terraform init -backend=false
-```
-
-Copy the test-only output override into the module root. In PowerShell:
-
-```powershell
+if ($LASTEXITCODE -ne 0) { throw "terraform init failed." }
+terraform validate
+if ($LASTEXITCODE -ne 0) { throw "terraform validate failed." }
+if (Test-Path .\virtual_machine_output_override.tf) { throw "Unexpected override already exists; refusing to overwrite it." }
 Copy-Item tests\overrides\virtual_machine_output_override.tf .
-```
-
-In Bash (Linux/macOS):
-
-```sh
-cp tests/overrides/virtual_machine_output_override.tf .
-```
-
-Run the complete suite with `terraform test`. To run just this module's test
-file, use the path separator for your shell/platform:
-
-```powershell
 terraform test '-filter=tests\virtual_machine.tftest.hcl'
+if ($LASTEXITCODE -ne 0) { throw "terraform test failed." }
 ```
 
+Bash (Linux/macOS):
+
 ```sh
+set -euo pipefail
+test_root="$(mktemp -d)"
+git archive HEAD | tar -x -C "$test_root"
+cd "$test_root"
+terraform init -backend=false
+terraform validate
+test ! -e virtual_machine_output_override.tf || { echo "Unexpected override already exists; refusing to overwrite it." >&2; exit 1; }
+cp tests/overrides/virtual_machine_output_override.tf .
 terraform test -filter=tests/virtual_machine.tftest.hcl
 ```
+
+The test-only output override is copied only after validation, since it is for
+testing the module as a root module. To run the complete suite instead of just
+this file, use `terraform test` without the `-filter` option.
 
 A successful command is not enough by itself: confirm Terraform reports at least
 one passing run, such as `Success! 14 passed, 0 failed` (the count may change as
 tests are added). A command that exits successfully but runs zero tests does not
 provide test coverage. The CI workflow enforces a nonzero passing-run count.
-Remove the copied `*_override.tf` file after testing; it is git-ignored.
+The disposable directory is left in your system temporary directory; remove that
+specific directory when you no longer need it.
 
 If the module references internal modules over SSH, you need SSH access to
 GitHub for `terraform init` to download them.
