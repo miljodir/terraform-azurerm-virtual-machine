@@ -39,8 +39,8 @@ variable "os_flavor" {
 
 variable "virtual_machine_size" {
   type        = string
-  description = "The Virtual Machine SKU for the Virtual Machine, Default is Standard_B2s"
-  default     = "Standard_B2s"
+  description = "The Virtual Machine SKU for the Virtual Machine, Default is Standard_B2as_v2"
+  default     = "Standard_B2as_v2"
 }
 
 variable "enable_accelerated_networking" {
@@ -98,13 +98,13 @@ variable "custom_image" {
 
 variable "linux_distribution_name" {
   type        = string
-  default     = "ubuntu2204"
+  default     = "ubuntu2404"
   description = "Variable to pick an OS flavour for Linux based VM."
 }
 
 variable "windows_distribution_name" {
   type        = string
-  default     = "windows2022dc"
+  default     = "windows2025az"
   description = "Variable to pick an OS flavour for Windows based VM."
 }
 
@@ -188,19 +188,37 @@ variable "enable_disk_encryption" {
 
 variable "patch_mode" {
   type        = string
-  description = "Possible values are Manual, AutomaticByOS, AutomaticByPlatform and ImageDefault. Defaults to AutomaticByOs."
-  default     = "AutomaticByOS"
+  description = "Possible values are Manual, AutomaticByOS, AutomaticByPlatform and ImageDefault"
+  default     = "AutomaticByPlatform"
+}
+
+variable "patch_assessment_mode" {
+  type        = string
+  description = "Possible values are ImageDefault, AutomaticByPlatform"
+  default     = "AutomaticByPlatform"
+}
+
+variable "hotpatching_enabled" {
+  type        = bool
+  description = "Enable or disable hotpatching for the VM. Defaults to false."
+  default     = false
 }
 
 variable "bypass_platform_safety_checks_on_user_schedule_enabled" {
   type        = bool
   description = "Set to true if platform safety checks should be bypassed on user schedule. Defaults to false."
-  default     = false
+  default     = true
 }
 
 variable "enable_automatic_updates" {
   type        = bool
   description = "Enable automatic updates of windows VM? Defaults to true."
+  default     = true
+}
+
+variable "vm_agent_platform_updates_enabled" {
+  type        = bool
+  description = "(DEPRECATED - remove in next major version bump) Enable or disable VM Agent platform updates. Defaults to true."
   default     = true
 }
 
@@ -227,6 +245,16 @@ variable "datadisks" {
     lun           = number
     override_name = optional(string, null)
   }))
+}
+
+variable "osdisk" {
+  description = "Optional custom osdisk settings. This setting should only be used when the VM is created from a snapshot"
+  default     = null
+
+  type = object({
+    create_option = optional(string, "Copy")
+    override_name = optional(string, null)
+  })
 }
 
 variable "enable_aad_login" {
@@ -256,7 +284,7 @@ variable "encryption_key_vault_id" {
 variable "encryption_at_host_enabled" {
   type        = bool
   description = "Enable or disable encryption at host. Cannot be used with Azure Disk Encryption. Defaults to false."
-  default     = false
+  default     = true
 }
 
 variable "vm_extension" {
@@ -347,7 +375,10 @@ variable "custom_script_extension" {
 
 variable "avd_register_session_host" {
   type = object({
-    module_url              = optional(string, "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_02-23-2022.zip")
+    #     # https://github.com/Azure/RDS-Templates/blob/master/ARM-wvd-templates/DSC/Configuration.zip (requires fw opening)
+    # https://github.com/Azure/RDS-Templates/issues/790
+    # Finding the latest extension version can be done via Azure Portal --> AVD quickstart --> View template
+    module_url              = optional(string, "https://wvdportalstorageblob.blob.core.windows.net/galleryartifacts/Configuration_1.0.02790.438.zip")
     host_pool_name          = string
     registration_info_token = string
     aad_join                = optional(bool, true)
@@ -363,4 +394,52 @@ variable "managed_identity_roles" {
   }))
   default     = {}
   description = "List of roles to assign to the managed identity"
+}
+
+variable "additional_capabilities" {
+  type = object({
+    ultra_ssd_enabled   = optional(bool, false)
+    hibernation_enabled = optional(bool, true)
+  })
+  default     = null
+  description = "Additional capabilities for the VM"
+}
+
+variable "secure_boot_enabled" {
+  type        = bool
+  description = "Enable or disable Secure Boot for the VM."
+  default     = true
+}
+
+variable "vtpm_enabled" {
+  type        = bool
+  description = "Enable or disable Virtual Trusted Platform Module (vTPM) for the VM."
+  default     = true
+}
+
+variable "disk_controller_type" {
+  type        = string
+  description = "The disk controller type for the VM. Possible values are 'SCSI' and 'NVMe'. Defaults to 'SCSI'."
+  default     = null
+  validation {
+    condition     = var.disk_controller_type == "SCSI" || var.disk_controller_type == "NVMe" || var.disk_controller_type == null
+    error_message = "disk_controller_type must be either 'SCSI' or 'NVMe'"
+  }
+
+}
+
+variable "nic_name" {
+  type        = string
+  description = "Override the network interface name. If not set, the name will be generated from the virtual machine name."
+  default     = null
+}
+
+variable "vm_power_action" {
+  type        = string
+  description = "The power action to perform on the VM. Possible values are 'power_on', 'power_off', or 'restart'. If not specified, no power action is taken."
+  default     = "power_on"
+  validation {
+    condition     = var.vm_power_action == null || var.vm_power_action == "power_on" || var.vm_power_action == "power_off" || var.vm_power_action == "restart"
+    error_message = "vm_power_action must be either null, 'power_on', 'power_off', or 'restart'"
+  }
 }

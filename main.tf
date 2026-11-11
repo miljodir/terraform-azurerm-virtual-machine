@@ -3,15 +3,22 @@
 #---------------------------------------------------------------
 resource "tls_private_key" "rsa" {
   count     = var.generate_admin_ssh_key == true && var.os_flavor == "linux" ? 1 : 0
-  algorithm = "RSA"
+  algorithm = "ED25519"
   rsa_bits  = 4096
+
+  lifecycle {
+    ignore_changes = [
+      #rsa_bits,
+      algorithm
+    ]
+  }
 }
 
 #----------------------------------------------------------
 # Resource Group, VNet, Subnet selection & Random Resources
 #----------------------------------------------------------
 resource "random_password" "passwd" {
-  count       = (var.disable_password_authentication != true && var.os_flavor == "linux") || (var.os_flavor == "windows" && var.admin_password == null) ? 1 : 0
+  count       = (var.disable_password_authentication != true && var.os_flavor == "linux") || (var.os_flavor == "windows" && var.admin_password == null) && var.osdisk == null ? 1 : 0
   length      = 24
   min_upper   = 4
   min_lower   = 2
@@ -27,13 +34,13 @@ resource "random_password" "passwd" {
 # Network Interface for Virtual Machine
 #---------------------------------------
 resource "azurerm_network_interface" "nic" {
-  name                          = "${var.virtual_machine_name}-nic"
-  resource_group_name           = var.resource_group_name
-  location                      = var.location
-  dns_servers                   = var.dns_servers
-  enable_ip_forwarding          = false
-  enable_accelerated_networking = var.enable_accelerated_networking
-  tags                          = var.tags
+  name                           = var.nic_name != null ? var.nic_name : "${var.virtual_machine_name}-nic"
+  resource_group_name            = var.resource_group_name
+  location                       = var.location
+  dns_servers                    = var.dns_servers
+  ip_forwarding_enabled          = false
+  accelerated_networking_enabled = var.enable_accelerated_networking
+  tags                           = var.tags
 
   ip_configuration {
     name                          = var.ipconfig_name
@@ -42,11 +49,43 @@ resource "azurerm_network_interface" "nic" {
     private_ip_address_allocation = var.private_ip_address_allocation_type
     private_ip_address            = var.private_ip_address_allocation_type == "Static" ? var.private_ip_address : null
   }
+
+  lifecycle {
+    ignore_changes = [ip_configuration[0].name]
+  }
 }
 
 #---------------------------------------
 # Managed disk creation and attachment
 #---------------------------------------
+
+resource "azurerm_managed_disk" "osdisk_create" {
+  count                = var.osdisk == null ? 0 : 1
+  name                 = var.osdisk.override_name != null ? var.osdisk.override_name : "${var.virtual_machine_name}-osdisk"
+  location             = var.location
+  resource_group_name  = var.resource_group_name
+  storage_account_type = "StandardSSD_LRS"
+  create_option        = var.osdisk.create_option
+  disk_size_gb         = var.os_disk_size_gb
+  os_type              = var.os_flavor == "windows" ? "Windows" : "Linux"
+
+  lifecycle {
+    ignore_changes = [
+      source_resource_id,
+      hyper_v_generation,
+      disk_iops_read_only,
+      disk_iops_read_write,
+      disk_mbps_read_only,
+      disk_mbps_read_write,
+      on_demand_bursting_enabled,
+      trusted_launch_enabled,
+      upload_size_bytes,
+      tags,
+
+    ]
+  }
+}
+
 resource "azurerm_managed_disk" "datadisks_create" {
   for_each             = var.datadisks
   name                 = each.value.override_name != null ? each.value.override_name : "${var.virtual_machine_name}-datadisk${each.value.lun}"
@@ -59,7 +98,8 @@ resource "azurerm_managed_disk" "datadisks_create" {
 
   lifecycle {
     ignore_changes = [
-      encryption_settings
+      encryption_settings,
+      zone
     ]
   }
 }
@@ -82,37 +122,53 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = var.admin_username
-  admin_password                                         = var.disable_password_authentication != true && var.admin_password == null ? try(random_password.passwd[0].result, null) : var.admin_password
+  admin_username                                         = var.osdisk == null ? var.admin_username : null
+  admin_password                                         = var.osdisk == null ? var.disable_password_authentication != true && var.admin_password == null ? try(random_password.passwd[0].result, null) : var.admin_password : null
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = var.provision_vm_agent
+  provision_vm_agent                                     = var.osdisk == null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
   availability_set_id                                    = var.availability_set_id
   zone                                                   = var.availability_zone
-  tags                                                   = var.tags
-  patch_mode                                             = var.patch_mode
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
+  patch_mode                                             = var.osdisk == null ? var.patch_mode : null
+  patch_assessment_mode                                  = var.osdisk == null ? var.patch_assessment_mode : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  secure_boot_enabled                                    = var.secure_boot_enabled
+  vtpm_enabled                                           = var.vtpm_enabled
+  disk_controller_type                                   = var.disk_controller_type
+  os_managed_disk_id                                     = var.osdisk != null ? azurerm_managed_disk.osdisk_create[0].id : null
 
   admin_ssh_key {
     username   = var.admin_username
     public_key = var.generate_admin_ssh_key == true && var.os_flavor == "linux" ? tls_private_key.rsa[0].public_key_openssh : file(var.admin_ssh_key_data)
   }
 
-  source_image_reference {
-    publisher = local.image["publisher"]
-    offer     = local.image["offer"]
-    sku       = local.image["sku"]
-    version   = local.image["version"]
+  dynamic "source_image_reference" {
+    for_each = var.osdisk != null ? [] : [1]
+    content {
+      publisher = local.image["publisher"]
+      offer     = local.image["offer"]
+      sku       = local.image["sku"]
+      version   = local.image["version"]
+    }
   }
 
   os_disk {
-    storage_account_type = var.os_disk_storage_account_type
+    storage_account_type = var.osdisk == null ? var.os_disk_storage_account_type : null
     caching              = "ReadWrite"
-    name                 = var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
-    disk_size_gb         = var.os_disk_size_gb != null ? var.os_disk_size_gb : null
+    name                 = var.osdisk != null ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
+    disk_size_gb         = var.os_disk_size_gb
+  }
+
+  dynamic "additional_capabilities" {
+    for_each = var.additional_capabilities == null ? [] : ["additional_capabilities"]
+
+    content {
+      ultra_ssd_enabled   = var.additional_capabilities.ultra_ssd_enabled
+      hibernation_enabled = var.additional_capabilities.hibernation_enabled
+    }
   }
 
   boot_diagnostics {}
@@ -126,7 +182,10 @@ resource "azurerm_linux_virtual_machine" "linux_vm" {
 
   lifecycle {
     ignore_changes = [
-      identity
+      identity,
+      source_image_reference[0],
+      secure_boot_enabled, # Gen2 VMs only
+      vtpm_enabled,        # Gen2 VMs only
     ]
   }
 }
@@ -144,34 +203,53 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   resource_group_name                                    = var.resource_group_name
   location                                               = var.location
   size                                                   = var.virtual_machine_size
-  admin_username                                         = var.admin_username
-  admin_password                                         = var.admin_password == null ? random_password.passwd[0].result : var.admin_password
+  admin_username                                         = var.osdisk == null ? var.admin_username : null
+  admin_password                                         = var.osdisk == null ? var.admin_password == null ? random_password.passwd[0].result : var.admin_password : null
   network_interface_ids                                  = [azurerm_network_interface.nic.id]
   source_image_id                                        = var.source_image_id != null ? var.source_image_id : null
-  provision_vm_agent                                     = var.provision_vm_agent
+  provision_vm_agent                                     = var.osdisk == null ? var.provision_vm_agent : null
   allow_extension_operations                             = var.allow_extension_operations
   encryption_at_host_enabled                             = var.encryption_at_host_enabled
   dedicated_host_id                                      = var.dedicated_host_id
   license_type                                           = var.license_type
   availability_set_id                                    = var.availability_set_id
   zone                                                   = var.availability_zone
-  patch_mode                                             = var.patch_mode
-  bypass_platform_safety_checks_on_user_schedule_enabled = var.bypass_platform_safety_checks_on_user_schedule_enabled
-  enable_automatic_updates                               = var.enable_automatic_updates
+  patch_mode                                             = var.osdisk == null ? var.patch_mode : null
+  patch_assessment_mode                                  = var.osdisk == null ? var.patch_assessment_mode : null
+  bypass_platform_safety_checks_on_user_schedule_enabled = var.osdisk == null ? var.bypass_platform_safety_checks_on_user_schedule_enabled : null
+  automatic_updates_enabled                              = var.osdisk == null ? var.enable_automatic_updates : null
   timezone                                               = var.timezone
+  secure_boot_enabled                                    = var.secure_boot_enabled
+  vtpm_enabled                                           = var.vtpm_enabled
+  hotpatching_enabled                                    = var.osdisk == null ? var.hotpatching_enabled : null
   tags                                                   = var.tags
+  disk_controller_type                                   = var.disk_controller_type
+  os_managed_disk_id                                     = var.osdisk != null ? azurerm_managed_disk.osdisk_create[0].id : null
 
-  source_image_reference {
-    publisher = local.image["publisher"]
-    offer     = local.image["offer"]
-    sku       = local.image["sku"]
-    version   = local.image["version"]
+  dynamic "source_image_reference" {
+    for_each = var.osdisk != null ? [] : [1]
+    content {
+      publisher = local.image["publisher"]
+      offer     = local.image["offer"]
+      sku       = local.image["sku"]
+      version   = local.image["version"]
+    }
   }
 
   os_disk {
-    storage_account_type = var.os_disk_storage_account_type
+    storage_account_type = var.osdisk == null ? var.os_disk_storage_account_type : null
     caching              = "ReadWrite"
-    name                 = var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
+    name                 = var.osdisk != null ? null : var.os_disk_name != null ? var.os_disk_name : "${var.virtual_machine_name}-osdisk"
+    disk_size_gb         = var.os_disk_size_gb
+  }
+
+  dynamic "additional_capabilities" {
+    for_each = var.additional_capabilities == null ? [] : ["additional_capabilities"]
+
+    content {
+      ultra_ssd_enabled   = var.additional_capabilities.ultra_ssd_enabled
+      hibernation_enabled = var.additional_capabilities.hibernation_enabled
+    }
   }
 
   boot_diagnostics {}
@@ -186,7 +264,10 @@ resource "azurerm_windows_virtual_machine" "win_vm" {
   lifecycle {
     ignore_changes = [
       timezone,
-      identity
+      zone,
+      identity,
+      secure_boot_enabled, # Gen2 VMs only
+      vtpm_enabled,        # Gen2 VMs only
     ]
   }
 }

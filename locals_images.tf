@@ -3,6 +3,12 @@ locals {
 
   ## Linux ##
   linux_distribution_list = {
+    ubuntu2404 = {
+      publisher = "Canonical"
+      offer     = "ubuntu-24_04-lts"
+      sku       = "minimal" #"server" # TBD
+      version   = "latest"
+    }
     ubuntu2204 = {
       publisher = "Canonical"
       offer     = "0001-com-ubuntu-server-jammy"
@@ -43,6 +49,30 @@ locals {
 
   ## Windows ##
   windows_distribution_list = {
+    windows2025az = {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2025-datacenter-azure-edition"
+      version   = "latest"
+    }
+    windows2025azsmall = {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2025-datacenter-azure-edition-smalldisk"
+      version   = "latest"
+    }
+    windows2022azhotpatch = {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2022-datacenter-azure-edition-hotpatch"
+      version   = "latest"
+    },
+    windows2022azhotpatchsmall = {
+      publisher = "MicrosoftWindowsServer"
+      offer     = "WindowsServer"
+      sku       = "2022-datacenter-azure-edition-hotpatch-smalldisk"
+      version   = "latest"
+    },
     windows2022dc = {
       publisher = "MicrosoftWindowsServer"
       offer     = "WindowsServer"
