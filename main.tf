@@ -292,3 +292,4 @@ resource "azurerm_role_assignment" "role" {
   principal_id         = var.os_flavor == "windows" ? azurerm_windows_virtual_machine.win_vm[0].identity[0].principal_id : azurerm_linux_virtual_machine.linux_vm[0].identity[0].principal_id
   principal_type       = "ServicePrincipal"
 }
+
