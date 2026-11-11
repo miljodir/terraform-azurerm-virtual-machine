@@ -14,6 +14,27 @@ These types of resources supported:
 * [SSH2 Key generation for Dev Environments](https://www.terraform.io/docs/providers/tls/r/private_key.html)
 * [Azure Monitoring Diagnostics](https://www.terraform.io/docs/providers/azurerm/r/monitor_diagnostic_setting.html)
 
+## Managed Identity Lifecycle
+
+`enable_managed_identity` defaults to `false`. For both Windows and Linux VMs,
+setting it to `true` configures a system-assigned identity, including on an
+existing VM. Setting it back to `false` removes the identity. Remove any
+`managed_identity_roles` entries when disabling the identity.
+
+**Upgrade behavior:** Earlier versions ignored all identity changes after VM
+creation. Identity configuration is now reconciled with the module inputs.
+Review the next plan for existing VMs: externally enabled system-assigned
+identities will be removed when `enable_managed_identity = false`, and externally
+attached user-assigned identities are not preserved. This module has no input
+for user-assigned identities; do not manage the same VM identity independently
+outside this module.
+
+Azure-generated `principal_id` and `tenant_id` remain provider-computed; no
+identity IDs need to be supplied. Removing and re-enabling a system-assigned
+identity creates a new principal, so permissions granted outside
+`managed_identity_roles` need to be updated separately. Other lifecycle
+exclusions, including secure boot and vTPM, are unchanged.
+
 ## VM Power Management
 
 This module now supports controlling the power state of VMs via the `vm_power_action` variable. This allows you to:

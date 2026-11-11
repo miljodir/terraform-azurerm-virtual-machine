@@ -92,6 +92,16 @@ Guidelines:
   documentation IP ranges such as `192.0.2.0/24`). Never use real subscription
   IDs, tenant IDs, names or addresses — this repository is public.
 - Prefer one behaviour per `run` block with a descriptive name.
+- Add every new test-only Terraform file (including `.tftest.hcl` files and
+  override fixtures) to `exclude-files` in `.github/workflows/tag-module.yaml`.
+  These are exact repository-relative paths, not glob patterns. This excludes
+  test files from release-directory detection on PR and merge-event runs without
+  skipping tests or excluding real production modules.
+- Identity lifecycle regressions first apply a VM with identity disabled, then
+  plan and apply enabling and disabling it using the same `state_key`, separately
+  for Windows and Linux. Keep these runs stateful: an assertion on a fresh VM
+  cannot detect an `ignore_changes` regression. The enable plans also check that
+  the unrelated secure boot and vTPM exclusions remain effective.
 
 ## Running locally
 
